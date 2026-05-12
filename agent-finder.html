@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StreetEasy & RentHop → RealtyMX Agent Finder</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#080c18;
+  --glass:rgba(255,255,255,0.04);
+  --border:rgba(255,255,255,0.08);
+  --border-accent:rgba(79,142,247,0.28);
+  --accent:#4f8ef7;
+  --accent2:#a78bfa;
+  --success:#34d399;
+  --error:#f87171;
+  --text:#f1f5f9;
+  --muted:rgba(241,245,249,0.55);
+  --dim:rgba(241,245,249,0.28);
+  --r:14px;
+  --rs:8px;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',system-ui,sans-serif;
+  min-height:100vh;
+  line-height:1.6;
+}
+
+body::before{
+  content:'';
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 55% at 10% 5%,rgba(79,142,247,.11) 0%,transparent 100%),
+    radial-gradient(ellipse 60% 50% at 90% 90%,rgba(167,139,250,.08) 0%,transparent 100%);
+}
+
+.wrap{position:relative;z-index:1;max-width:800px;margin:0 auto;padding:0 16px 80px}
+
+/* ── Header ── */
+header{text-align:center;padding:52px 0 44px}
+
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  padding:7px 16px;border-radius:99px;margin-bottom:20px;
+}
+.pill-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.pill-txt{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.4px}
+
+h1{font-size:clamp(26px,5vw,40px);font-weight:800;letter-spacing:-1px;line-height:1.15}
+h1 .arrow{color:var(--accent);margin:0 5px}
+h1 .grad{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.sub{margin-top:12px;font-size:15px;color:var(--muted);max-width:440px;margin-inline:auto}
+
+/* ── Card ── */
+.card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:var(--r);padding:22px 24px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  transition:border-color .2s;
+}
+.card:hover{border-color:rgba(255,255,255,.12)}
+
+.clabel{
+  display:flex;align-items:center;gap:8px;
+  font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.2px;color:var(--dim);margin-bottom:18px;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.dot.green{background:var(--success);box-shadow:0 0 6px var(--success)}
+
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.dot.live{animation:pulse-dot 1.5s ease-in-out infinite}
+
+/* ── Search ── */
+.search-card{border-color:var(--border-accent);background:rgba(79,142,247,.03)}
+
+.search-row{display:flex;gap:10px}
+
+.url-input{
+  flex:1;min-width:0;
+  padding:13px 16px;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:var(--rs);color:var(--text);
+  font-size:13px;font-family:'SF Mono','Fira Code',monospace;
+  outline:none;transition:border-color .2s,background .2s;
+}
+.url-input:focus{border-color:rgba(79,142,247,.55);background:rgba(79,142,247,.07)}
+.url-input::placeholder{color:var(--dim)}
+
+.btn-search{
+  flex-shrink:0;padding:13px 22px;
+  background:linear-gradient(135deg,var(--accent) 0%,#3a76e3 100%);
+  color:#fff;font-size:14px;font-weight:600;border:none;border-radius:var(--rs);
+  cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;
+  transition:transform .15s,box-shadow .15s,opacity .15s;
+  box-shadow:0 4px 18px rgba(79,142,247,.3);
+}
+.btn-search:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 24px rgba(79,142,247,.42)}
+.btn-search:active:not(:disabled){transform:translateY(0)}
+.btn-search:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── Preview row ── */
+#previewRow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+@media(max-width:560px){#previewRow{grid-template-columns:1fr}}
+
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.flabel{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.9px;color:var(--dim);margin-bottom:4px}
+.fval{font-size:15px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fval .v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mono{font-family:'SF Mono','Fira Code',monospace}
+.url-txt{font-size:11.5px;font-family:'SF Mono','Fira Code',monospace;color:var(--accent);word-break:break-all;line-height:1.6}
+
+/* ── Copy button ── */
+.cbtn{
+  flex-shrink:0;padding:4px 10px;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:6px;color:var(--muted);font-size:11px;font-weight:500;
+  cursor:pointer;display:inline-flex;align-items:center;gap:4px;
+  transition:all .15s;white-space:nowrap;
+}
+.cbtn:hover{background:rgba(255,255,255,.09);color:var(--text);border-color:rgba(255,255,255,.15)}
+.cbtn.ok{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3);color:var(--success)}
+
+/* ── Loading ── */
+.load-inner{display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px 0}
+.spinner{width:36px;height:36px;border:3px solid rgba(79,142,247,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-size:14px;color:var(--muted)}
+
+/* ── Error ── */
+.error-card{background:rgba(248,113,113,.06);border-color:rgba(248,113,113,.22);display:flex;gap:14px}
+.err-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.err-title{font-size:15px;font-weight:600;color:var(--error);margin-bottom:4px}
+.err-body{font-size:14px;color:var(--muted);line-height:1.5}
+
+/* ── Results ── */
+@keyframes slide-up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+#resultsSection{animation:slide-up .35s ease-out}
+
+.status-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;
+  background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.18);
+  border-radius:var(--rs);margin-bottom:14px;font-size:13px;
+}
+.s-ok{color:var(--success);font-weight:600;display:flex;align-items:center;gap:6px}
+.s-count{color:var(--muted);font-size:12px}
+
+.result-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.nav-btn{
+  padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer;transition:all .15s;
+}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.09);color:var(--text)}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed}
+.nav-lbl{font-size:13px;color:var(--muted)}
+
+/* Listing */
+.listing-img{width:100%;height:195px;object-fit:cover;border-radius:10px;margin-bottom:18px;display:block}
+.img-ph{
+  width:100%;height:150px;border-radius:10px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;margin-bottom:18px;
+}
+
+.price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:18px}
+.price-val{
+  font-size:32px;font-weight:800;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--accent),#6dd5fa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.price-per{font-size:14px;color:var(--muted)}
+
+.id-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.22);
+  color:var(--accent2);padding:3px 10px;border-radius:99px;
+  font-size:11px;font-weight:700;font-family:'SF Mono','Fira Code',monospace;
+}
+
+.hrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+@media(max-width:480px){.chips{grid-template-columns:repeat(2,1fr)}}
+
+.chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--rs);padding:12px 10px;text-align:center}
+.chip-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--dim);margin-bottom:5px}
+.chip-v{font-size:20px;font-weight:700}
+.chip-v.sm{font-size:12px;line-height:1.3}
+
+/* Agent */
+.agent-hero{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.avatar{
+  width:52px;height:52px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;color:#fff;
+}
+.a-name{font-size:19px;font-weight:700}
+.a-role{
+  display:inline-block;font-size:11px;font-weight:600;color:var(--accent);
+  background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.2);
+  padding:2px 9px;border-radius:99px;margin-top:3px;
+}
+
+.ci{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.ci:last-child{border-bottom:none;padding-bottom:0}
+.ci-icon{width:34px;height:34px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ci-info{flex:1;min-width:0}
+.ci-type{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:2px}
+.ci-val{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Util */
+.hidden{display:none !important}
+.mt16{margin-top:16px}
+.mt12{margin-top:12px}
+
+/* Platform badges */
+.badge-se{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.25);color:var(--accent)}
+.badge-rh{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);color:var(--success)}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(12px);
+  background:rgba(52,211,153,.92);backdrop-filter:blur(8px);
+  color:#053418;font-size:13px;font-weight:700;
+  padding:10px 22px;border-radius:99px;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:999;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Mobile */
+@media(max-width:540px){
+  .search-row{flex-direction:column}
+  .btn-search{justify-content:center}
+  header{padding:36px 0 32px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <div class="pill">
+      <div class="pill-dot"></div>
+      <span class="pill-txt">Powered by RealtyMX API</span>
+    </div>
+    <h1>StreetEasy <span style="color:var(--dim);font-weight:400">&</span> RentHop <span class="arrow">→</span> <span class="grad">Agent Finder</span></h1>
+    <p class="sub">Paste a StreetEasy or RentHop listing URL to instantly locate the listing agent via RealtyMX</p>
+  </header>
+
+  <!-- Search Card -->
+  <div class="card search-card">
+    <div class="clabel">
+      <span class="dot" id="searchDot"></span>
+      StreetEasy or RentHop Listing URL
+    </div>
+    <div class="search-row">
+      <input
+        id="urlInput"
+        class="url-input"
+        type="text"
+        value="https://www.renthop.com/listings/117-post-avenue/3h/76448247"
+        placeholder="https://streeteasy.com/building/… or renthop.com/listings/…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="btn-search" id="searchBtn" onclick="search()">
+        <span id="btnIcon">🔍</span>
+        <span id="btnLbl">Find Agent</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Preview Row -->
+  <div id="previewRow" class="hidden">
+    <div class="card">
+      <div class="clabel"><span class="dot"></span>Extracted Data</div>
+      <div class="field">
+        <div class="flabel">Building Address</div>
+        <div class="fval">
+          <span id="pvAddr" class="v">—</span>
+          <button class="cbtn" onclick="copyEl('pvAddr',this)">📋 Copy</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="flabel">Unit / Apt</div>
+        <div class="fval"><span id="pvUnit" class="v mono">—</span></div>
+      </div>
+      <div class="field">
+        <div class="flabel">Source</div>
+        <div class="fval"><span id="pvPlatform" class="v"></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="clabel"><span class="dot"></span>API Request URL</div>
+      <div class="field">
+        <div class="flabel">Endpoint</div>
+        <div class="url-txt" id="pvUrl">—</div>
+      </div>
+      <div class="mt12">
+        <button class="cbtn" style="width:100%;justify-content:center" onclick="copyEl('pvUrl',this)">📋 Copy API URL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="card hidden mt16" id="loadingCard">
+    <div class="load-inner">
+      <div class="spinner"></div>
+      <div class="load-txt">Querying RealtyMX…</div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="card error-card hidden mt16" id="errorCard">
+    <div class="err-icon">⚠️</div>
+    <div>
+      <div class="err-title">Unable to fetch listing</div>
+      <div class="err-body" id="errMsg">An error occurred.</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsSection" class="hidden mt16">
+
+    <div class="status-bar">
+      <span class="s-ok">✓ Listing found</span>
+      <span class="s-count" id="resCount"></span>
+    </div>
+
+    <div class="result-nav hidden" id="resNav">
+      <button class="nav-btn" id="prevBtn" onclick="nav(-1)" disabled>← Prev</button>
+      <span class="nav-lbl" id="navLbl">1 of 1</span>
+      <button class="nav-btn" id="nextBtn" onclick="nav(1)">Next →</button>
+    </div>
+
+    <!-- Listing Details -->
+    <div class="card">
+      <div class="hrow">
+        <div class="clabel" style="margin-bottom:0"><span class="dot"></span>Listing Details</div>
+        <span class="id-badge" id="listingId"># —</span>
+      </div>
+      <div id="imgWrap"></div>
+      <div class="price-row">
+        <span class="price-val" id="price">—</span>
+        <span class="price-per" id="pricePer"></span>
+      </div>
+      <div class="field">
+        <div class="flabel">Full Address</div>
+        <div class="fval">
+          <span id="fullAddr" class="v">—</span>
+          <button class="cbtn" onclick="copyEl('fullAddr',this)">📋 Copy</button>
+        </div>
+      </div>
+      <div class="chips">
+        <div class="chip"><div class="chip-lbl">Unit</div><div class="chip-v mono" id="unitChip">—</div></div>
+        <div class="chip"><div class="chip-lbl">Beds</div><div class="chip-v" id="bedsChip">—</div></div>
+        <div class="chip"><div class="chip-lbl">Baths</div><div class="chip-v" id="bathsChip">—</div></div>
+        <div class="chip"><div class="chip-lbl">Area</div><div class="chip-v sm" id="nbrChip">—</div></div>
+      </div>
+    </div>
+
+    <!-- Agent Details -->
+    <div class="card mt16">
+      <div class="clabel"><span class="dot green live"></span>Agent Details</div>
+      <div class="agent-hero">
+        <div class="avatar" id="agentAv">?</div>
+        <div>
+          <div class="a-name" id="agentName">—</div>
+          <span class="a-role">Listing Agent</span>
+        </div>
+      </div>
+      <div class="ci">
+        <div class="ci-icon">📧</div>
+        <div class="ci-info"><div class="ci-type">Email</div><div class="ci-val" id="agentEmail">—</div></div>
+        <button class="cbtn" onclick="copyEl('agentEmail',this)">📋 Copy</button>
+      </div>
+      <div class="ci">
+        <div class="ci-icon">📞</div>
+        <div class="ci-info"><div class="ci-type">Phone</div><div class="ci-val" id="agentPhone">—</div></div>
+        <button class="cbtn" onclick="copyEl('agentPhone',this)">📋 Copy</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+// ── parseListingUrl(url) — detects platform and dispatches ──
+function parseListingUrl(url) {
+  if (!url || !url.trim()) throw new Error('URL is empty');
+  let u;
+  try { u = new URL(url.trim()); } catch { throw new Error('Not a valid URL'); }
+  const host = u.hostname.toLowerCase();
+  if (host.includes('streeteasy.com')) return parseStreetEasyUrl(url);
+  if (host.includes('renthop.com'))    return parseRentHopUrl(url);
+  throw new Error('Supported platforms: streeteasy.com and renthop.com');
+}
+
+// ── parseStreetEasyUrl(url) ──────────────────────────
+function parseStreetEasyUrl(url) {
+  const u = new URL(url.trim());
+  const segs = u.pathname.split('/').filter(Boolean);
+  const types = ['building','apt','rental','sale'];
+  const i = segs.findIndex(s => types.includes(s.toLowerCase()));
+
+  if (i === -1 || segs.length < i + 3)
+    throw new Error('Expected: streeteasy.com/building/{address}/{unit}');
+
+  const addrSlug = segs[i + 1];
+  const unitSlug = segs[i + 2];
+  return {
+    address: slugToAddress(addrSlug),
+    unit: unitSlug.toUpperCase(),
+    addrSlug, unitSlug,
+    platform: 'StreetEasy'
+  };
+}
+
+// ── parseRentHopUrl(url) ─────────────────────────────
+function parseRentHopUrl(url) {
+  const u = new URL(url.trim());
+  const segs = u.pathname.split('/').filter(Boolean);
+  // /listings/{address-slug}/{unit}/{listing-id?}
+  if (segs[0] !== 'listings' || segs.length < 3)
+    throw new Error('Expected: renthop.com/listings/{address}/{unit}');
+
+  const addrSlug = segs[1];
+  const unitSlug = segs[2];
+  // RentHop slugs are plain address with no borough suffix — just title-case
+  const address = addrSlug.split('-')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+  return {
+    address,
+    unit: unitSlug.toUpperCase(),
+    addrSlug, unitSlug,
+    platform: 'RentHop'
+  };
+}
+
+function slugToAddress(slug) {
+  const suffixes = [
+    /-new_york$/i, /-brooklyn$/i, /-queens$/i,
+    /-bronx$/i,   /-staten_island$/i, /-manhattan$/i,
+    /-jersey_city$/i, /-hoboken$/i
+  ];
+  let clean = slug;
+  for (const re of suffixes) {
+    const r = slug.replace(re, '');
+    if (r !== slug) { clean = r; break; }
+  }
+  // Fallback: drop any trailing hyphen-segment that contains underscore
+  if (clean === slug) {
+    const parts = slug.split('-');
+    const cut = parts.findIndex(p => p.includes('_'));
+    if (cut > 0) clean = parts.slice(0, cut).join('-');
+  }
+  return clean.split('-')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+// ── buildRealtyMXUrl(address, unit) ─────────────────
+function buildRealtyMXUrl(address, unit) {
+  const kw = `${address} ${unit}`.trim().split(' ').join('+');
+  return `https://api.realtymx.com/properties?apiKey=41706c356e32656b&keyword=${kw}`;
+}
+
+// ── renderResults(listings) ──────────────────────────
+let _all = [], _idx = 0;
+
+function renderResults(listings) {
+  _all = listings;
+  _idx = 0;
+  renderOne(listings[0]);
+  $('resCount').textContent = `${listings.length} result${listings.length !== 1 ? 's' : ''} found`;
+  if (listings.length > 1) { show('resNav'); syncNav(); } else hide('resNav');
+  show('resultsSection');
+}
+
+function renderOne(L) {
+  // Image
+  const w = $('imgWrap');
+  w.innerHTML = L.main_image
+    ? `<img src="${esc(L.main_image)}" class="listing-img" alt="Listing"
+         onerror="this.outerHTML='<div class=\\'img-ph\\'>🏙️</div>'">`
+    : `<div class="img-ph">🏙️</div>`;
+
+  // Price
+  if (L.financials_price != null) {
+    $('price').textContent = '$' + Number(L.financials_price).toLocaleString();
+    $('pricePer').textContent = '/mo';
+  } else {
+    $('price').textContent = '—';
+    $('pricePer').textContent = '';
+  }
+
+  txt('fullAddr',   L.main_address        || '—');
+  txt('unitChip',   L.main_apt             || '—');
+  txt('bedsChip',   L.essentials_beds      ?? '—');
+  txt('bathsChip',  L.essentials_bath      ?? '—');
+  txt('listingId', `# ${L.main_id         ?? '—'}`);
+
+  const nbhd = L.main_neighborhood || '—';
+  const el = $('nbrChip');
+  el.textContent = nbhd;
+  el.className = 'chip-v' + (nbhd.length > 10 ? ' sm' : '');
+
+  const name = L.agents_agent_name || 'Unknown Agent';
+  txt('agentName',  name);
+  txt('agentEmail', L.agents_agent_email  || '—');
+  txt('agentPhone', fmtPhone(L.agents_agent_phone));
+  $('agentAv').textContent = initials(name);
+}
+
+function nav(dir) {
+  _idx = Math.max(0, Math.min(_all.length - 1, _idx + dir));
+  renderOne(_all[_idx]);
+  syncNav();
+}
+function syncNav() {
+  $('prevBtn').disabled = _idx === 0;
+  $('nextBtn').disabled = _idx === _all.length - 1;
+  $('navLbl').textContent = `${_idx + 1} of ${_all.length}`;
+}
+
+// ── search() ────────────────────────────────────────
+async function search() {
+  const raw = $('urlInput').value.trim();
+  hide('errorCard'); hide('resultsSection'); hide('previewRow');
+
+  let parsed;
+  try { parsed = parseListingUrl(raw); }
+  catch (e) { showErr(e.message); return; }
+
+  const { address, unit, platform } = parsed;
+  const apiUrl = buildRealtyMXUrl(address, unit);
+
+  txt('pvAddr', address);
+  txt('pvUnit', unit);
+  txt('pvUrl',  apiUrl);
+  $('pvPlatform').innerHTML = platform === 'RentHop'
+    ? '<span class="badge-rh">RentHop</span>'
+    : '<span class="badge-se">StreetEasy</span>';
+  show('previewRow');
+
+  setLoading(true);
+  show('loadingCard');
+
+  try {
+    const res = await fetch(apiUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const data = await res.json();
+    const listings = data.LISTINGS || data.listings || data.results || [];
+
+    hide('loadingCard'); setLoading(false);
+
+    if (!listings.length) {
+      showErr(`No listings found for "${address} ${unit}". The property may not be active on RealtyMX, or try verifying the address format.`);
+      return;
+    }
+    renderResults(listings);
+
+  } catch (e) {
+    hide('loadingCard'); setLoading(false);
+    let msg = e.message;
+    if (/failed to fetch|network/i.test(msg))
+      msg = `Network error — the API may not allow direct browser requests (CORS). ` +
+            `Host this page on a server or use a CORS proxy. (${e.message})`;
+    showErr(msg);
+  }
+}
+
+// ── Clipboard ───────────────────────────────────────
+let _tt;
+async function copyEl(id, btn) {
+  const text = ($(id)?.textContent || '').trim();
+  if (!text || text === '—') return;
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const t = Object.assign(document.createElement('textarea'),
+      {value: text, style: 'position:fixed;opacity:0'});
+    document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+  }
+  if (btn) {
+    const prev = btn.innerHTML;
+    btn.innerHTML = '✓ Copied'; btn.classList.add('ok');
+    setTimeout(() => { btn.innerHTML = prev; btn.classList.remove('ok'); }, 1600);
+  }
+  const toast = $('toast');
+  toast.classList.add('on');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => toast.classList.remove('on'), 2000);
+}
+
+// ── Helpers ──────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const txt = (id, v) => $(id).textContent = v;
+const show = id => $(id).classList.remove('hidden');
+const hide = id => $(id).classList.add('hidden');
+const esc = s => String(s).replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function fmtPhone(p) {
+  if (p == null) return '—';
+  const d = String(p).replace(/\D/g,'');
+  if (d.length === 10)  return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  if (d.length === 11 && d[0]==='1') return `+1 (${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  return p;
+}
+
+function initials(name) {
+  return (name||'?').split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || '?';
+}
+
+function setLoading(on) {
+  $('searchBtn').disabled = on;
+  $('btnIcon').textContent  = on ? '⏳' : '🔍';
+  $('btnLbl').textContent   = on ? 'Searching…' : 'Find Agent';
+  $('searchDot').classList.toggle('live', on);
+}
+
+function showErr(msg) {
+  $('errMsg').textContent = msg;
+  show('errorCard'); hide('loadingCard'); hide('resultsSection');
+}
+
+$('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+$('urlInput').addEventListener('input', () => { hide('errorCard'); });
+</script>
+</body>
+</html>
